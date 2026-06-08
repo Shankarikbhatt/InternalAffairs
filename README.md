@@ -4,6 +4,7 @@
 
 **InternalAffairs** is a student-built, student-focused internal marks calculator designed for university students. Enter your internal assessment scores and instantly find out exactly how much you need in your semester exam to hit your target grade — no spreadsheets, no manual math, no panic.
 
+Live Demo Link: https://shankarikbhatt.github.io/InternalAffairs/
 ---
 
 ## ✨ Features
