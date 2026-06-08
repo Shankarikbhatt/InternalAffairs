@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internal Marks Calculator - Symmetrical Dashboard</title>
+<style id="theme-styles">
+  /* Active theme CSS will be injected here dynamically */
+</style>
+<style>
+  /* Core layout rules shared across all themes */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    display: flex; 
+    justify-content: center; 
+    padding: 40px 24px; 
+    min-height: 100vh; 
+    transition: background 0.3s, color 0.3s; 
+    position: relative;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  
+  /* Symmetrical UX Responsive Layout Grid */
+  .dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 260px 1fr 260px;
+    gap: 30px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ==========================================================================
+     RIGHT SIDE CONTROLS COLUMN
+     ========================================================================== */
+  .right-controls-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  @keyframes rotateBorder {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .floating-toggle-wrapper {
+    position: relative;
+    width: 100%;
+    height: 46px;
+    border-radius: 23px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    cursor: pointer;
+  }
+
+  .floating-toggle-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(#1d9e75, #0f766e, #dfb15b, #8b5cf6, #ec4899, #1d9e75);
+    animation: rotateBorder 3.5s linear infinite;
+    z-index: 1;
+  }
+
+  .theme-btn-floating {
+    position: absolute;
+    top: 2px; left: 2px; right: 2px; bottom: 2px;
+    background: #111115;
+    color: #ffffff;
+    border: none;
+    border-radius: 21px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+  }
+  .theme-btn-floating:hover { background: #191920; }
+
+  .snapshot-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px dashed currentColor;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: all 0.2s;
+    color: inherit;
+    text-align: center;
+  }
+  .snapshot-btn:hover { opacity: 1; }
+
+  .cram-btn-card {
+    width: 100%;
+    padding: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid currentColor;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    opacity: 0.5;
+    text-align: center;
+    transition: all 0.2s;
+    color: inherit;
+  }
+  .cram-btn-card:hover { opacity: 1; }
+
+  .lowlight-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(245, 158, 11, 0.05); backdrop-filter: brightness(0.65) contrast(0.9) sepia(0.2); pointer-events: none; z-index: 99999; display: none; }
+
+  /* ==========================================================================
+     LEFT SIDE UTILITIES COLUMN
+     ========================================================================== */
+  .left-widgets-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .widget-gradient-card {
+    position: relative;
+    border-radius: 16px;
+    padding: 2px;
+    background: linear-gradient(135deg, #1d9e75, #dfb15b, #8b5cf6, #ec4899);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+
+  .widget-gradient-card:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  }
+  .widget-gradient-card:hover::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: conic-gradient(#1d9e75, #dfb15b, #8b5cf6, #ec4899, #1d9e75);
+    animation: rotateBorder 3.5s linear infinite;
+    z-index: 1;
+  }
+
+  .widget-inner-content {
+    position: relative;
+    background: #ffffff;
+    color: #1f2937;
+    border-radius: 14px;
+    padding: 1.2rem;
+    z-index: 2;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .widget-inner-content h4 { font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f3f4f6; padding-bottom: 6px; }
+  
+  /* Checklist Styling */
+  #checklist-container { max-height: 140px; overflow-y: auto; }
+  .checklist-item { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 6px 0; cursor: pointer; }
+  .checklist-item input { cursor: pointer; width: 14px; height: 14px; }
+  .checklist-item input:checked + span { text-decoration: line-through; opacity: 0.5; }
+  .checklist-add-row { display: flex; gap: 6px; margin-top: 8px; border-top: 1px dashed #e5e7eb; padding-top: 8px; }
+  .checklist-input { flex: 1; padding: 5px 8px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: transparent; color: inherit; }
+  .checklist-btn { padding: 4px 10px; font-size: 12px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; }
+
+  /* Breathing Guide UI */
+  .breathing-box { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .breathing-circle { width: 55px; height: 55px; border-radius: 50%; background: #e2e8f0; transition: transform 1s ease-in-out, background 1s ease-in-out; }
+  
+  .breathe-in { transform: scale(1.2) !important; background: #0d9488 !important; box-shadow: 0 0 15px rgba(13,148,136,0.3); }
+  .breathe-hold { transform: scale(1.2) !important; background: #b45309 !important; box-shadow: 0 0 15px rgba(180,83,9,0.3); }
+  .breathe-out { transform: scale(0.7) !important; background: #0284c7 !important; box-shadow: 0 0 15px rgba(2,132,199,0.3); }
+
+  .breath-cycle-counter { font-size: 11px; font-weight: 700; opacity: 0.6; }
+  .breathe-controls { display: flex; gap: 6px; width: 100%; justify-content: center; margin-top: 4px; }
+  .breathe-action-btn { padding: 5px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #cbd5e1; border-radius: 4px; background: transparent; cursor: pointer; color: inherit; }
+  .breathe-action-btn:hover { background: rgba(0,0,0,0.05); }
+
+  /* Soundscape Audio Selectors */
+  .audio-selectors { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .audio-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .audio-toggle { width: 34px; height: 18px; appearance: none; background: #cbd5e1; border-radius: 9px; position: relative; cursor: pointer; outline: none; transition: background 0.2s; }
+  .audio-toggle:checked { background: #0f766e; }
+  .audio-toggle::before { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: transform 0.2s; }
+  .audio-toggle:checked::before { transform: translateX(16px); }
+
+  .scratchpad-textarea { width: 100%; height: 80px; padding: 8px; font-size: 12px; border: 1px dashed #cbd5e1; border-radius: 6px; outline: none; resize: none; background: transparent; color: inherit; font-family: inherit; }
+
+  /* ==========================================================================
+     CENTER COLUMN: CORE CALCULATOR
+     ========================================================================== */
+  .center-calculator-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .card { width: 100%; max-width: 560px; height: fit-content; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+  .hero { margin-bottom: 1.8rem; }
+  .hero h1 { font-size: 34px; font-weight: 800; line-height: 1.2; }
+  .hero p { font-size: 14px; margin-top: 6px; }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 10px; }
+  
+  .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .type-btn { padding: 14px 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  
+  .divider { height: 1px; margin: 1.5rem 0; }
+  .fields { display: grid; gap: 12px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field-row.single { grid-template-columns: 1fr; }
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 13px; }
+  input[type=number], select { width: 100%; padding: 9px 12px; font-size: 14px; outline: none; transition: border-color 0.15s; }
+  
+  .target-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+  .calc-btn { padding: 11px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.15s; }
+  .reset-btn { padding: 10px; font-size: 14px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.15s; }
+  
+  .result-card { padding: 1.25rem; margin-bottom: 12px; }
+  .result-label { font-size: 13px; margin-bottom: 4px; }
+  .result-main { font-size: 30px; font-weight: 800; }
+  .result-main span { font-size: 16px; font-weight: 400; }
+  .breakdown-item { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+  .total-line { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; padding-top: 8px; margin-top: 4px; }
+  .verdict { font-size: 13px; margin-top: 6px; }
+  .error { font-size: 13px; margin-top: 6px; font-weight: 600; }
+  
+  #form-area, #results { display: none; }
+
+  /* Liquid Viewport Stacking Rule */
+  @media (max-width: 1024px) {
+    body { padding: 20px 16px; }
+    .dashboard-wrapper { grid-template-columns: 1fr; gap: 24px; }
+    .right-controls-column { order: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 560px; margin: 0 auto; }
+    .right-controls-column .widget-gradient-card { grid-column: span 2; }
+    .center-calculator-column { order: 2; }
+    .left-widgets-column { order: 3; width: 100%; max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  }
+
+  @media (max-width: 600px) {
+    .left-widgets-column { grid-template-columns: 1fr; }
+    .right-controls-column { grid-template-columns: 1fr; }
+    .right-controls-column .widget-gradient-card { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+<div id="lowlight-dimmer" class="lowlight-overlay"></div>
+
+<div class="dashboard-wrapper">
+  
+  <div class="left-widgets-column">
+    
+    <div class="widget-gradient-card">
+      <div class="widget-inner-content">
+        <h4>Exam Packing List</h4>
+        <div id="checklist-container"></div>
+        <div class="checklist-add-row">
+          <input type="text" id="custom-item-input" class="checklist-input" placeholder="Add task..." onkeypress="handleChecklistKey(event)" />
+          <button class="checklist-btn" onclick="addChecklistItem()">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="widget-gradient-card">
+      <div class="widget-inner-content">
+        <div class="breathing-box">
+          <h4>Calming Breath Guide</h4>
+          <div id="breathe-node" class="breathing-circle"></div>
+          <div class="breathing-text" id="breathe-instruction">Ready when you are</div>
+          <div class="breath-cycle-counter" id="cycle-counter-display">Cycle: 0 / 7</div>
+          <div class="breathe-controls">
+            <button class="breathe-action-btn" id="breath-trigger-btn" onclick="startBreathing()">Start</button>
+            <button class="breathe-action-btn" id="breath-stop-btn" onclick="terminateBreathing()" style="display: none;">Exit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="widget-gradient-card">
+      <div class="widget-inner-content">
+        <h4>Focus Soundscape</h4>
+        <div class="audio-selectors">
+          <div class="audio-row"><span>Brown Noise (Deep Focus)</span><input type="checkbox" class="audio-toggle" onchange="toggleAudio('brown', this)"></div>
+          <div class="audio-row"><span>White Noise (Block Static)</span><input type="checkbox" class="audio-toggle" onchange="toggleAudio('white', this)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="center-calculator-column">
+    <div class="card">
+      <div class="hero">
+        <h1>Stop guessing.<br><span>Start scoring.</span></h1>
+        <p>Enter your internals — we'll tell you exactly what it takes to hit your target grade.</p>
+      </div>
+
+      <p class="section-label">Step 1 — Select subject type</p>
+      <div class="type-grid">
+        <button class="type-btn" onclick="selectType('j', this)">J Component</button>
+        <button class="type-btn" onclick="selectType('math', this)">Math</button>
+        <button class="type-btn" onclick="selectType('tamil', this)">Tamil</button>
+      </div>
+
+      <div id="form-area">
+        <div class="divider"></div>
+        <p class="section-label">Step 2 — Enter your marks</p>
+        <div id="fields" class="fields"></div>
+        <p id="input-error" class="error" style="display:none;"></p>
+
+        <div class="divider"></div>
+        <p class="section-label">Step 3 — Pick your target grade</p>
+        <div class="target-row">
+          <div class="field-group">
+            <label>I want to achieve</label>
+            <select id="target-grade">
+              <option value="O">O — Outstanding (90–100)</option>
+              <option value="A+">A+ (80–89)</option>
+              <option value="A">A (70–79)</option>
+              <option value="B+">B+ (60–69)</option>
+              <option value="B" selected>B (50–59)</option>
+              <option value="C">C — Pass (40–49)</option>
+            </select>
+          </div>
+          <button class="calc-btn" onclick="calculate()">Calculate</button>
+        </div>
+      </div>
+
+      <div id="results">
+        <div class="divider"></div>
+        <p class="section-label">Results</p>
+
+        <div class="result-card">
+          <p class="result-label">Your internal marks</p>
+          <p class="result-main" id="internal-display">—</p>
+          <div id="breakdown" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="result-card">
+          <p class="result-label">To achieve <strong id="target-display"></strong>, score this in your semester exam</p>
+          <p class="result-main" id="external-needed">—</p>
+          <p id="verdict" class="verdict"></p>
+        </div>
+
+        <button class="reset-btn" onclick="resetCalc()">Calculate for another subject</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-controls-column">
+    
+    <div class="floating-toggle-wrapper" onclick="cycleTheme()">
+      <button class="theme-btn-floating" id="theme-toggle-trigger">Original Mint</button>
+    </div>
+    
+    <button class="snapshot-btn" onclick="saveConfigurationSnapshot()">💾 Save Snapshot</button>
+    
+    <button class="cram-btn-card" id="cram-mode-btn" onclick="toggleCramMode()">💡 Cram Mode: Off</button>
+
+    <div class="widget-gradient-card">
+      <div class="widget-inner-content">
+        <h4>Syllabus Scratchpad</h4>
+        <textarea id="scratchpad-field" class="scratchpad-textarea" placeholder="Type temporary notes here... automatically saved." oninput="saveScratchpad()"></textarea>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const THEMES = {
+    mint: { name: "Original Mint", css: `body { background: #f0f4f8; color: #111; } .card { background: #fff; border-radius: 14px; padding: 2rem; border: 1px solid transparent; } .hero h1 span { color: #1D9E75; } .hero p, .section-label { color: #888; } .type-btn { border: 1.5px solid #ddd; border-radius: 10px; background: #fff; color: #333; } .type-btn.active { border-color: #1D9E75; background: #E1F5EE; color: #0F6E56; font-weight: 700; } .divider { background: #eee; } label { color: #555; } input[type=number], select { border: 1.5px solid #ddd; border-radius: 8px; color: #111; background: #fff; } input[type=number]:focus, select:focus { border-color: #1D9E75; } .calc-btn { border-radius: 8px; background: #0F6E56; color: #fff; } .calc-btn:hover { background: #085041; } .reset-btn { border: 1.5px solid #ddd; border-radius: 8px; background: #fff; color: #333; } .result-card { background: #f8faf9; border: 1.5px solid #d4ede5; border-radius: 10px; } .result-label { color: #777; } .result-main { color: #111; } .total-line { border-top: 1px solid #d4ede5; } .achieved { color: #0F6E56; } .impossible { color: #c0392b; } .widget-inner-content { background: #ffffff; color: #1f2937; } .widget-inner-content h4 { color: #4b5563; } .checklist-input { border-color: #cbd5e1; color: #1f2937; } .checklist-btn { background: #111115; color: #fff; }` },
+    curiousMix: { name: "The Curious Mix", css: `body { background: linear-gradient(135deg, #e7f0e7 0%, #fefcf3 100%); color: #1f2937; } .card { background: #ffffff; border-radius: 18px; padding: 2.5rem; border: 1px solid #d1d5db; } .hero h1 span { color: #0f766e; } .hero p, .section-label { color: #6b7280; } .type-btn { border: 1px solid #d1d5db; border-radius: 10px; background: #ffffff; color: #4b5563; } .type-btn.active { border-color: #0f766e; background: #f0fdf4; color: #0f766e; font-weight: 700; } .divider { background: #e5e7eb; } label { color: #4b5563; } input[type=number], select { border: 1px solid #d1d5db; border-radius: 8px; color: #1f2937; background: #ffffff; } input[type=number]:focus, select:focus { border-color: #0f766e; box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1); } .calc-btn { border-radius: 10px; background: #0f766e; color: #ffffff; } .calc-btn:hover { background: #0c615a; } .reset-btn { border: 1px solid #d1d5db; border-radius: 8px; background: #ffffff; color: #4b5563; } .result-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; } .result-label { color: #6b7280; } .result-main { color: #0f766e; } .total-line { border-top: 1px dashed #d1d5db; } .achieved { color: #166534; } .impossible { color: #991b1b; } .widget-inner-content { background: #ffffff; color: #1f2937; } .widget-inner-content h4 { color: #0f766e; } .checklist-input { border-color: #cbd5e1; color: #1f2937; } .checklist-btn { background: #0f766e; color: #fff; }` },
+    mocha: { name: "Mocha & Gold", css: `body { background: #2e2520; color: #c4b5ac; } .card { background: #3e332c; border-radius: 16px; padding: 2.5rem; border: 1px solid #4a3e36; } .hero h1 { color: #fdfaf7; } .hero h1 span { color: #dfb15b; } .hero p, .section-label { color: #9c8a7f; } .type-btn { border: 1px solid #54463d; border-radius: 10px; background: #352b25; color: #c4b5ac; } .type-btn.active { border-color: #dfb15b; background: rgba(223, 177, 91, 0.1); color: #dfb15b; font-weight: 700; } .divider { background: #4a3e36; } label { color: #c4b5ac; } input[type=number], select { border: 1px solid #54463d; border-radius: 8px; color: #fdfaf7; background: #2e2520; } input[type=number]:focus, select:focus { border-color: #dfb15b; } .calc-btn { border-radius: 10px; background: #dfb15b; color: #2e2520; } .calc-btn:hover { background: #ca9f4a; } .reset-btn { border: 1px solid #54463d; border-radius: 8px; background: #352b25; color: #c4b5ac; } .result-card { background: #2e2520; border: 1px solid #4a3e36; border-radius: 12px; } .result-label { color: #9c8a7f; } .result-main { color: #dfb15b; } .total-line { border-top: 1px dashed #54463d; } .achieved { color: #52c41a; } .impossible { color: #ff4d4f; } .widget-inner-content { background: #3e332c; color: #fdfaf7; } .widget-inner-content h4 { color: #dfb15b; border-bottom: 1px solid #4a3e36; } .checklist-input { border-color: #54463d; color: #fdfaf7; } .checklist-btn { background: #dfb15b; color: #2e2520; }` },
+    amethyst: { name: "Midnight Amethyst", css: `body { background: #0b071a; color: #a78bfa; } .card { background: #130e26; border-radius: 16px; padding: 2.5rem; border: 1px solid #231a45; } .hero h1 { color: #f5f3ff; } .hero h1 span { color: #c084fc; } .hero p, .section-label { color: #7c3ded; } .type-btn { border: 1px solid #231a45; border-radius: 10px; background: #130e26; color: #a78bfa; } .type-btn.active { border-color: #c084fc; background: rgba(192, 132, 252, 0.08); color: #c084fc; font-weight: 700; } .divider { background: #231a45; } label { color: #a78bfa; } input[type=number], select { border: 1px solid #231a45; border-radius: 8px; color: #f5f3ff; background: #0b071a; } input[type=number]:focus, select:focus { border-color: #c084fc; } .calc-btn { border-radius: 10px; background: #7c3ded; color: #ffffff; } .calc-btn:hover { background: #6d28d9; } .reset-btn { border: 1px solid #231a45; border-radius: 8px; background: #130e26; color: #7c3ded; } .result-card { background: #0b071a; border: 1px solid #4c1d95; border-radius: 12px; } .result-label { color: #c084fc; } .result-main { color: #f5f3ff; } .total-line { border-top: 1px dashed #231a45; } .achieved { color: #34d399; } .impossible { color: #f87171; } .widget-inner-content { background: #130e26; color: #f5f3ff; } .widget-inner-content h4 { color: #c084fc; border-bottom: 1px solid #231a45; } .checklist-input { border-color: #231a45; color: #f5f3ff; } .checklist-btn { background: #7c3ded; color: #fff; }` }
+  };
+
+  const themeKeys = Object.keys(THEMES);
+  let themeIndex = 0;
+
+  function updateTheme() {
+    const currentKey = themeKeys[themeIndex];
+    const targetConfig = THEMES[currentKey];
+    document.getElementById('theme-styles').innerHTML = targetConfig.css;
+    document.getElementById('theme-toggle-trigger').textContent = targetConfig.name;
+  }
+
+  function cycleTheme() {
+    themeIndex = (themeIndex + 1) % themeKeys.length;
+    updateTheme();
+  }
+
+  /* ==========================================================================
+     MANUAL 7-CYCLE BREATHING ENGINE
+     ========================================================================== */
+  let breathInterval = null;
+  let currentCycle = 0;
+  let breathState = 0; 
+
+  function startBreathing() {
+    terminateBreathing();
+    document.getElementById('breath-trigger-btn').style.display = 'none';
+    document.getElementById('breath-stop-btn').style.display = 'inline-block';
+    currentCycle = 1;
+    breathState = 0;
+    executeBreathingStep();
+    
+    breathInterval = setInterval(() => {
+      breathState = (breathState + 1) % 3;
+      if (breathState === 0) {
+        currentCycle++;
+        if (currentCycle > 7) {
+          terminateBreathing();
+          return;
+        }
+      }
+      executeBreathingStep();
+    }, 4000); 
+  }
+
+  function executeBreathingStep() {
+    const circle = document.getElementById('breathe-node');
+    const text = document.getElementById('breathe-instruction');
+    document.getElementById('cycle-counter-display').textContent = "Cycle: " + currentCycle + " / 7";
+    circle.className = "breathing-circle"; 
+    
+    if (breathState === 0) {
+      circle.classList.add('breathe-in');
+      text.textContent = "Breathe In...";
+    } else if (breathState === 1) {
+      circle.classList.add('breathe-hold');
+      text.textContent = "Hold It...";
+    } else {
+      circle.classList.add('breathe-out');
+      text.textContent = "Breathe Out...";
+    }
+  }
+
+  function terminateBreathing() {
+    clearInterval(breathInterval);
+    breathInterval = null;
+    currentCycle = 0;
+    const circle = document.getElementById('breathe-node');
+    if(circle) { circle.className = "breathing-circle"; }
+    document.getElementById('breathe-instruction').textContent = "Ready when you are";
+    document.getElementById('cycle-counter-display').textContent = "Cycle: 0 / 7";
+    document.getElementById('breath-trigger-btn').style.display = 'inline-block';
+    document.getElementById('breath-stop-btn').style.display = 'none';
+  }
+
+  /* ==========================================================================
+     WEB AUDIO NOISE SYNTHESIZER
+     ========================================================================== */
+  let audioCtx = null;
+  let audioNodes = {};
+
+  function initAudioContext() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  function generateNoiseBuffer(type) {
+    const bufferSize = 2 * audioCtx.sampleRate;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      if (type === 'brown') {
+        output[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = output[i];
+        output[i] *= 3.5; 
+      } else {
+        output[i] = white * 0.4;
+      }
+    }
+    return noiseBuffer;
+  }
+
+  function toggleAudio(type, checkbox) {
+    initAudioContext();
+    if (checkbox.checked) {
+      if (audioNodes[type]) return;
+      const source = audioCtx.createBufferSource();
+      source.buffer = generateNoiseBuffer(type);
+      source.loop = true;
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      source.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      source.start();
+      audioNodes[type] = { source, gainNode };
+    } else {
+      if (audioNodes[type]) {
+        try { audioNodes[type].source.stop(); } catch(e){}
+        audioNodes[type].source.disconnect();
+        audioNodes[type] = null;
+      }
+    }
+  }
+
+  /* ==========================================================================
+     DASHBOARD DATA SYNC
+     ========================================================================== */
+  let checklistItems = ["Hall Ticket / Admit Card", "Official Student ID", "2 Ballpoint Pens", "Approved Calculator"];
+
+  function renderChecklist() {
+    const container = document.getElementById('checklist-container');
+    let html = '';
+    checklistItems.forEach((item, idx) => {
+      html += `<label class="checklist-item"><input type="checkbox" id="chk_${idx}"><span>${item}</span></label>`;
+    });
+    container.innerHTML = html;
+  }
+
+  function addChecklistItem() {
+    const input = document.getElementById('custom-item-input');
+    const val = input.value.trim();
+    if (val !== "") {
+      checklistItems.push(val);
+      input.value = "";
+      renderChecklist();
+    }
+  }
+
+  function handleChecklistKey(e) { if (e.key === 'Enter') addChecklistItem(); }
+
+  function saveScratchpad() {
+    localStorage.setItem('calc_scratchpad', document.getElementById('scratchpad-field').value);
+  }
+
+  function saveConfigurationSnapshot() {
+    const inputState = {};
+    document.querySelectorAll('input[type=number]').forEach(inp => {
+      inputState[inp.id] = inp.value;
+    });
+    const snapshot = { inputs: inputState, type: currentType, target: document.getElementById('target-grade').value };
+    localStorage.setItem('calc_snapshot_data', JSON.stringify(snapshot));
+    alert("Snapshot secured successfully into browser memory!");
+  }
+
+  function loadSnapshotOnStart() {
+    const rawNotes = localStorage.getItem('calc_scratchpad');
+    if (rawNotes) document.getElementById('scratchpad-field').value = rawNotes;
+    const rawSnap = localStorage.getItem('calc_snapshot_data');
+    if (rawSnap) {
+      const snap = JSON.parse(rawSnap);
+      if (snap.type) {
+        const btn = Array.from(document.querySelectorAll('.type-btn')).find(b => b.textContent.toLowerCase().includes(snap.type));
+        if (btn) selectType(snap.type, btn);
+        setTimeout(() => {
+          Object.keys(snap.inputs).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = snap.inputs[id];
+          });
+          document.getElementById('target-grade').value = snap.target;
+        }, 50);
+      }
+    }
+  }
+
+  let isCramModeActive = false;
+  function toggleCramMode() {
+    isCramModeActive = !isCramModeActive;
+    document.getElementById('lowlight-dimmer').style.display = isCramModeActive ? 'block' : 'none';
+    document.getElementById('cram-mode-btn').textContent = isCramModeActive ? "💡 Cram Mode: On" : "💡 Cram Mode: Off";
+  }
+
+  /* ==========================================================================
+     CORE CALCULATOR MATH
+     ========================================================================== */
+  const TYPES = {
+    j: { internalMax: 50, externalMax: 50, fields: [{ id: 'cat1', label: 'CAT 1 (out of 50)', max: 50, weight: 12.5 }, { id: 'cat2', label: 'CAT 2 (out of 50)', max: 50, weight: 12.5 }, { id: 'labrecord', label: 'Lab + Record (out of 50)', max: 50, weight: 25, labrecord: true }] },
+    math: { internalMax: 40, externalMax: 60, fields: [{ id: 'cat1', label: 'CAT 1 (out of 50)', max: 50, weight: 7.5 }, { id: 'cat2', label: 'CAT 2 (out of 50)', max: 50, weight: 7.5 }, { id: 'unit1', label: 'Unit Test 1 (out of 25)', max: 25, weight: 2.5, unit: true }, { id: 'unit2', label: 'Unit Test 2 (out of 25)', max: 25, weight: 2.5, unit: true }, { id: 'assign', label: 'Assignment (out of 10)', max: 10, weight: 10, direct: true }, { id: 'gp', label: 'G.P (out of 10)', max: 10, weight: 10, direct: true }] },
+    tamil: { internalMax: 40, externalMax: 60, fields: [{ id: 'cat1', label: 'CAT 1 (out of 50)', max: 50, weight: 20 }, { id: 'cat2', label: 'CAT 2 (out of 50)', max: 50, weight: 20 }] }
+  };
+
+  const GRADES = [{ grade: 'O', min: 90, max: 100 }, { grade: 'A+', min: 80, max: 89 }, { grade: 'A', min: 70, max: 79 }, { grade: 'B+', min: 60, max: 69 }, { grade: 'B', min: 50, max: 59 }, { grade: 'C', min: 40, max: 49 }, { grade: 'U', min: 0, max: 39 }];
+  let currentType = null;
+
+  function selectType(t, btn) {
+    currentType = t;
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderFields(t);
+    document.getElementById('form-area').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('input-error').style.display = 'none';
+  }
+
+  function renderFields(t) {
+    const cfg = TYPES[t];
+    const container = document.getElementById('fields');
+    let html = '';
+    const fields = cfg.fields;
+    for (let i = 0; i < fields.length; i += 2) {
+      const isLast = (i + 1 >= fields.length);
+      html += '<div class="field-row' + (isLast ? ' single' : '') + '">';
+      for (let j = i; j < Math.min(i + 2, fields.length); j++) {
+        const f = fields[j];
+        html += '<div class="field-group"><label>' + f.label + '</label><input type="number" id="inp_' + f.id + '" min="0" max="' + f.max + '" placeholder="0" /></div>';
+      }
+      html += '</div>';
+    }
+    container.innerHTML = html;
+  }
+
+  function getConverted(f, val) {
+    if (f.direct) return val;
+    if (f.unit) return (val / 25) * f.weight;
+    if (f.labrecord) return (val / 50) * 25;
+    return (val / 50) * f.weight;
+  }
+
+  function calculate() {
+    const err = document.getElementById('input-error');
+    err.style.display = 'none';
+    const cfg = TYPES[currentType];
+    let total = 0;
+    let breakdownHtml = '';
+    let hasError = false;
+
+    for (const f of cfg.fields) {
+      const inp = document.getElementById('inp_' + f.id);
+      const raw = parseFloat(inp.value);
+      if (isNaN(raw) || raw < 0 || raw > f.max) {
+        err.textContent = 'Please enter valid marks for "' + f.label + '" (0 to ' + f.max + ').';
+        err.style.display = 'block';
+        hasError = true;
+        break;
+      }
+      const converted = getConverted(f, raw);
+      total += converted;
+      breakdownHtml += '<div class="breakdown-item"><span>' + f.label.split('(')[0].trim() + '</span><span>' + converted.toFixed(2) + ' / ' + f.weight + '</span></div>';
+    }
+
+    if (hasError) return;
+
+    breakdownHtml += '<div class="total-line"><span>Total internal</span><span>' + total.toFixed(2) + ' / ' + cfg.internalMax + '</span></div>';
+    document.getElementById('breakdown').innerHTML = breakdownHtml;
+
+    const targetGrade = document.getElementById('target-grade').value;
+    const gradeInfo = GRADES.find(g => g.grade === targetGrade);
+
+    const neededScaled = gradeInfo.min - total;
+    const scaleFactor = 100 / cfg.externalMax;
+    const neededActual = Math.ceil(neededScaled * scaleFactor);
+
+    document.getElementById('internal-display').innerHTML = total.toFixed(2) + ' <span>/ ' + cfg.internalMax + '</span>';
+    document.getElementById('target-display').textContent = targetGrade + ' (' + gradeInfo.min + '–' + gradeInfo.max + ')';
+
+    const extEl = document.getElementById('external-needed');
+    const verdictEl = document.getElementById('verdict');
+
+    if (neededScaled <= 0) {
+      extEl.innerHTML = 'Already achieved! <span>/ 100</span>';
+      verdictEl.innerHTML = '<span class="achieved">You already have enough internal marks to secure grade ' + targetGrade + ' even with 0 in your semester exam!</span>';
+    } else if (neededActual > 100) {
+      extEl.innerHTML = neededActual + ' <span>/ 100</span>';
+      verdictEl.innerHTML = '<span class="impossible">Not achievable — you would need more than 100 in your semester exam.</span>';
+    } else {
+      extEl.innerHTML = neededActual + ' <span>/ 100</span>';
+      verdictEl.innerHTML = '<span class="normal">Score at least <strong>' + neededActual + ' out of 100</strong> in your semester exam to achieve grade ' + targetGrade + '.</span>';
+    }
+    document.getElementById('results').style.display = 'block';
+  }
+
+  function resetCalc() {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('form-area').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    currentType = null;
+  }
+
+  renderChecklist();
+  updateTheme();
+  window.onload = loadSnapshotOnStart;
+</script>
+</body>
+</html>
